@@ -166,25 +166,16 @@ function sampleSphere(n::Int)
     map(normalize, Slices(randn(3,n),1))
 end
 
-## Testing
 a = Spherical(1:7);
 @time mean(map(x->abs(harmonic(a/sqrt(dot(a,a)), x))^2,sampleSphere(10000)))*4π
+
+mean(map(x->abs(harmonic(a/sqrt(dot(a,a)), x))^2,sampleSphere(10000)))*4π
+
 # it works perfectly and is about 100x faster than Mathematica
 # Everything is done through the generators
 
-# the surface
-scene = Scene()
-s = Makie.surface(x, y, z, image = F, colormap = :viridis, colornorm = (-1.0, 1.0))
-# s[:image] = F .+ 0.1 # update image
-
-##
-x = rand(10)
-y = rand(10)
-colors = rand(10)
-scene = scatter(x, y, color = colors)
-
-
-n = 2
+## Plot a spherical tensor
+n = 120
 θ = [0;(0.5:n-0.5)/n;1]
 φ = [(0:2n-2)*2/(2n-1);2]
 x = [cospi(φ)*sinpi(θ) for θ in θ, φ in φ]
@@ -193,8 +184,16 @@ z = [cospi(θ) for θ in θ, φ in φ]
 
 
 a = Spherical(1:7);
-
-vals = map(((x,y,z) -> harmonic(a/sqrt(dot(a,a)), [x,y,z])), x,y,z)
 ##
 
+function complexImage(vals::Array{Complex{Float64}}) 
+    max = maximum(abs.(vals))
+    map(x -> HSV(angle(x)*360/(2π),(abs(x)/max)^.5,1),vals) 
+end
 
+vals = map(((x,y,z) -> harmonic(a/sqrt(dot(a,a)), [x,y,z])), x,y,z);
+complexImage(vals)
+
+s = Makie.surface(x, y, z, color = complexImage(vals))
+
+##
